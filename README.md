@@ -39,6 +39,7 @@ CORECPRO currently supports emulation of Samba’s CVE-2017-7494 “SambaCry”,
 
 In Metasploit, this includes the remote code execution exploit:
 * exploit/linux/samba/is_known_pipename
+
 CORECPRO’s libSSH deception is low interaction—no shell is given—and supports detection of Nmap’s version scan and Metasploit’s exploitation attempt.
 
 ### Logging
