@@ -6,13 +6,13 @@ CORECPRO (COunter REConnaissance PROgram) is a proof-of-concept cyber deception 
 It is recommended to run CORECPRO with a dedicated user that does not have root privileges. For Samba deception, it is required to install rootless Docker for your system.
 In order to receive data on ports 22 or 445—the ports for libSSH and Samba, respectively—as a non-root user, CORECPRO must be bound to other ports and the systems firewall must forward them to 22 and 445. By default, these non-root ports are 2222 and 4445. On a RHEL-based distribution, the following commands will allow you to forward these ports:
 ```
-# firewall-cmd --set-default-zone=drop
-# firewall-cmd --permanent --zone=drop --add-port=445/tcp
-# firewall-cmd --permanent --zone=drop --add-masquerade # Zone must be the zone currently being used; this isn't necessarily the default zone
-# firewall-cmd --permanent --zone=drop --add-forward-port=port=445:proto=tcp:toport=4445 # First port: Real, second: CORECPRO
-# firewall-cmd --permanent --zone=drop --add-forward-port=port=22:proto=tcp:toport=2222 
-# firewall-cmd --reload
-# firewall-cmd --list-all
+sudo firewall-cmd --set-default-zone=drop
+sudo firewall-cmd --permanent --zone=drop --add-port=445/tcp
+sudo firewall-cmd --permanent --zone=drop --add-masquerade # Zone must be the zone currently being used; this isn't necessarily the default zone
+sudo firewall-cmd --permanent --zone=drop --add-forward-port=port=445:proto=tcp:toport=4445 # First port: Real, second: CORECPRO
+sudo firewall-cmd --permanent --zone=drop --add-forward-port=port=22:proto=tcp:toport=2222 
+sudo firewall-cmd --reload
+sudo firewall-cmd --list-all
 ```
 The output should look like this:
 ```
