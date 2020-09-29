@@ -78,14 +78,13 @@ Samba exploitation leads to a reverse shell into a Docker container. It is highl
 ### Usage
 ```
 main.py [arguments]
--a or --all: Enables both Samba and SSH deception
 -v or --verbose: Dumps packet if an error occurs
 -o or --stdout: Prints logs to standard output in addition to a file
 -h or --help: Brings up this menu
 --logLocationMain: Specifies location wherein logs acquired for SIEM alerts are saved
 --logLocationShell: Specifies location wherein logs acquired from the reverse shell are saved
---sshD: Enable SSH deception
---smbD: Enable Samba deception
+--sshD: Disable SSH deception
+--smbD: Disable Samba deception
 --smbPort: Specify the port for Samba
 --smbHostName: Specify a host name to give when an attacker runs a script scan; default: randomly generated hexadecimal
 --smbWorkgroupName: Specify a workgroup name to give when an attacker runs a script scan; default: workgroup
@@ -100,9 +99,9 @@ Run with default settings (Samba and LibSSH deception on port 4445 and 2222, res
 ```
 Only enable Samba deception with the shell and SIEM logs held in separate folders over port 4445. Output the logs to stdout, as well:
 ```
-./main.py --smbD -o --logLocationMain=/home/corecpro_user/CORECPRO_LOGS --logLocationShell=/home/corecpro_user/CORECPRO_SHELL_LOGS --smbPort=4445
+./main.py --sshD -o --logLocationMain=/home/corecpro_user/CORECPRO_LOGS --logLocationShell=/home/corecpro_user/CORECPRO_SHELL_LOGS --smbPort=4445
 ```
 Only enable Samba deception with the shell and SIEM logs held in separate folders over port 4445. Output the logs to stdout, use our custom image for Docker and set the hostname to "fileserver12":
 ```
-./main.py --smbD -o --logLocationMain=/home/corecpro_user/CORECPRO_LOGS --logLocationShell=/home/corecpro_user/CORECPRO_SHELL_LOGS --smbPort=4445 --dockerImage=deception --dockerHostName="fileserver12"
+./main.py --sshD -o --logLocationMain=/home/corecpro_user/CORECPRO_LOGS --logLocationShell=/home/corecpro_user/CORECPRO_SHELL_LOGS --smbPort=4445 --dockerImage=deception --dockerHostName="fileserver12"
 ```
