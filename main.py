@@ -134,7 +134,7 @@ class CoRecPro:
 
 
 def main(argv):
-    version: str = "1.0"
+    version: str = "1.0.1"
     ssh_port = None
     smb_port = None
     default_ssh_port: int = 2222
@@ -143,14 +143,13 @@ def main(argv):
     docker_image: str = "centos:7"
 
     help_menu = "main.py [arguments]\n" + \
-                "-a or --all: Enables both Samba and SSH deception\n" + \
                 "-v or --verbose: Dumps packet if an error occurs\n" + \
                 "-o or --stdout: Prints logs to standard output in addition to a file\n" + \
                 "-h or --help: Brings up this menu\n" + \
                 "--logLocationMain: Specifies location wherein logs acquired for SIEM alerts are saved\n" + \
                 "--logLocationShell: Specifies location wherein logs acquired from the reverse shell are saved\n" + \
-                "--sshD: Enable SSH deception\n" + \
-                "--smbD: Enable Samba deception\n" + \
+                "--sshD: Disable SSH deception\n" + \
+                "--smbD: Disable Samba deception\n" + \
                 "--smbPort: Specify the port for Samba\n" + \
                 "--smbHostName: Specify a host name to give when an attacker runs a script scan; default: " \
                 "randomly generated hexadecimal\n" + \
@@ -172,15 +171,12 @@ def main(argv):
     p = CoRecPro()
     sel = selectors.DefaultSelector()
 
-    ssh_deception = False
-    smb_deception = False
+    ssh_deception = True
+    smb_deception = True
     Out.norm("Counter Reconnaissance Program V" + version)
     if len(opts) != 0:
         for opt, arg in opts:
-            if opt in ("-a", "--all"):
-                smb_deception = True
-                ssh_deception = True
-            elif opt in ("-v", "--verbose"):
+            if opt in ("-v", "--verbose"):
                 p.log.verbose = True
             elif opt in ("-h", "--help"):
                 print(help_menu)
@@ -203,9 +199,9 @@ def main(argv):
                     Out.err("Unable to write to the given shell log directory. Shutting down.")
                     sys.exit(1)
             elif opt == "--sshD":
-                ssh_deception = True
+                ssh_deception = False
             elif opt == "--smbD":
-                smb_deception = True
+                smb_deception = False
             elif opt == "--smbPort":
                 try:
                     smb_port = int(arg)
@@ -249,16 +245,14 @@ def main(argv):
                 ssh_port = default_ssh_port
             Out.norm("libSSH deception on port " + str(ssh_port) + ": " + str(ssh_deception))
         elif ssh_port and not ssh_deception:
-            Out.warn("libSSH: Port set, but deception is disabled. Is this intentional? Use \"--sshD\" to enable "
-                     "libSSH deception.")
+            Out.warn("libSSH: Port set, but deception is disabled. Is this intentional?")
 
         if smb_deception:
             if smb_port is None:
                 smb_port = default_smb_port
-            Out.norm("Samba deception on port " + str(smb_port) + ": " + str(smb_deception))
+            Out.norm("Samba deception on port " + str(smb_port) + " : " + str(smb_deception))
         elif smb_port and not smb_deception:
-            Out.warn("Samba: Port set, but deception is disabled. Is this intentional? Use \"--smbD\" to enable Samba "
-                     "deception.")
+            Out.warn("Samba: Port set, but deception is disabled. Is this intentional?")
 
     # No arguments leads us here. Both deception methods are launched.
     if len(opts) == 0:
@@ -266,6 +260,18 @@ def main(argv):
         smb_deception = True
         ssh_port = default_ssh_port
         smb_port = default_smb_port
+        try:
+            p.log.write_empty_shell()
+        except OSError:
+            Out.err("Unable to write shell logs to the current directory. Shutting down.")
+            sys.exit(1)
+
+        try:
+            p.log.write_empty_main()
+        except OSError:
+            Out.err("Unable to write SIEM logs to the current directory. Shutting down.")
+            sys.exit(1)
+
         Out.norm("Launching with default options...")
         Out.norm("libSSH deception on port " + str(ssh_port) + ": " + str(ssh_deception))
         Out.norm("Samba deception on port " + str(smb_port) + " : " + str(smb_deception))
@@ -318,12 +324,16 @@ def main(argv):
         while True:
             events = sel.select()
             for key, mask in events:
-                if key.data is None:  # None means a client is attempting to connect
-                    p.accept_conn(key.fileobj, sel)
-                else:
-                    try:
+                try:
+                    if key.data is None:  # None means a client is attempting to connect
+                        p.accept_conn(key.fileobj, sel)
+                    else:
                         p.deceive_conn(key, mask, sel)
-                    except Exception as ex:
+                except Exception as ex:
+                    if type(ex) == ConnectionResetError:
+                        # Logging any reset attempts, in case of an Nmap connect scan
+                        p.log.write(LogData("interaction", "info", "N/A", "unknown"), key.data.addr[0], key.data.port)
+                    else:
                         Out.warn("An exception was caught at the server loop. Printing exception and moving on.")
                         Out.warn("SYSTEM: " + "".join(traceback.TracebackException.from_exception(ex).format()))
 
