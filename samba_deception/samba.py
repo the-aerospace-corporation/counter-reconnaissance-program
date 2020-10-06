@@ -375,7 +375,8 @@ class Samba:
 
     def __logoff(self) -> bytes:
         smb = Smb1
-        self.logged_in.remove(self.client_port)
+        if self.client_port in self.logged_in:
+            self.logged_in.remove(self.client_port)
         self.failed_login = False
         self.current_dir = ""
         return smb.netbios_wrapper(smb.smb_wrapper(self.packet, False, smb.logoff_andx_response()))

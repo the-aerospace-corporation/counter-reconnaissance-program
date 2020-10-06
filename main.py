@@ -134,7 +134,7 @@ class CoRecPro:
 
 
 def main(argv):
-    version: str = "1.0.1"
+    version: str = "1.0.2"
     ssh_port = None
     smb_port = None
     default_ssh_port: int = 2222
