@@ -88,6 +88,7 @@ main.py [arguments]
 --smbPort: Specify the port for Samba
 --smbHostName: Specify a host name to give when an attacker runs a script scan; default: randomly generated hexadecimal
 --smbWorkgroupName: Specify a workgroup name to give when an attacker runs a script scan; default: workgroup
+--dockerRunningContainer: Specify a Docker running container to tap into; cannot be used with --dockerImage or --dockerHostName and attempts to do so will be ignored
 --dockerImage: Specify an image for Docker; default: centos:7
 --dockerHostName: Specify a host name to give an attacker when they get shell; default: localhost
 ```
@@ -104,4 +105,9 @@ Only enable Samba deception with the shell and SIEM logs held in separate folder
 Only enable Samba deception with the shell and SIEM logs held in separate folders over port 4445. Output the logs to stdout, use our custom image for Docker and set the hostname to "fileserver12":
 ```
 ./main.py --sshD -o --logLocationMain=/home/corecpro_user/CORECPRO_LOGS --logLocationShell=/home/corecpro_user/CORECPRO_SHELL_LOGS --smbPort=4445 --dockerImage=deception --dockerHostName="fileserver12"
+```
+
+Tap into a running Docker container instead of initializing a new one:
+```
+./main.py --dockerRunningContainer=my_running_container
 ```
