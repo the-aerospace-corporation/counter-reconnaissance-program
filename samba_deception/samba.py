@@ -24,7 +24,7 @@ from typing import Union
 from logger import LogData
 from out import Out
 from samba_deception.constants import *
-from samba_deception.docker import Docker
+from samba_deception.docker import DockerRunning, DockerInitialize
 from samba_deception.smb1 import Smb1
 from samba_deception.utils import Utils
 
@@ -55,7 +55,8 @@ class Samba:
         self.log_nmap = LogData("vulnerability scan", "medium", "confirmed", "nmap")  # Default log, used frequently
         self.log_metasploit = LogData("exploitation", "high", "confirmed", "metasploit")  # Default log, used frequently
 
-    def identify_and_respond(self, packet: bytes, ip_port: (str, int), docker: Union[None, Docker]) -> (bytes, LogData):
+    def identify_and_respond(self, packet: bytes, ip_port: (str, int),
+                             docker: Union[None, DockerRunning, DockerInitialize]) -> (bytes, LogData):
         """Identifies and responds to SMB packets from Nmap and Metasploit
 
         :param ip_port: Client IP address and port, where ip[0] is their IP address and ip[1] is their port

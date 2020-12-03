@@ -29,7 +29,7 @@ import binascii
 from out import Out
 from constants import *
 from samba_deception.samba import Samba
-from samba_deception.docker import Docker
+from samba_deception.docker import DockerRunning, DockerInitialize
 from libssh import LibSSH
 from logger import Logger, LogData
 from typing import Union
@@ -141,6 +141,7 @@ def main(argv):
     default_smb_port: int = 4445
     docker_host_name: str = "localhost"
     docker_image: str = "centos:7"
+    docker_running_container: Union[str, None] = None
 
     help_menu = "main.py [arguments]\n" + \
                 "-v or --verbose: Dumps packet if an error occurs\n" + \
@@ -155,6 +156,8 @@ def main(argv):
                 "randomly generated hexadecimal\n" + \
                 "--smbWorkgroupName: Specify a workgroup name to give when an attacker runs a script scan;" \
                 " default: workgroup\n" + \
+                "--dockerRunningContainer: Specify a Docker running container to tap into; cannot be used with " \
+                "--dockerImage or --dockerHostName and attempts to do so will be ignored\n" + \
                 "--dockerImage: Specify an image for Docker; default: centos:7\n" + \
                 "--dockerHostName: Specify a host name to give an attacker when they get shell; " \
                 "default: localhost\n"
@@ -162,7 +165,8 @@ def main(argv):
     try:
         opts, args = getopt.getopt(argv, "haov", ["verbose", "help", "stdout", "all", "sshD", "sshPort=", "smbD",
                                                   "smbPort=", "smbHostName=", "smbWorkgroupName=", "logLocationMain=",
-                                                  "logLocationShell=", "dockerHostName=", "dockerImage="])
+                                                  "logLocationShell=", "dockerRunningContainer=", "dockerHostName=",
+                                                  "dockerImage="])
     except getopt.GetoptError:
         Out.err("Invalid arguments")
         print(help_menu)
@@ -232,6 +236,8 @@ def main(argv):
                         sys.exit(1)
                 p.workgroup_name = arg
                 Out.norm("Samba workgroup set to: " + arg)
+            elif opt == "--dockerRunningContainer":
+                docker_running_container = arg
             elif opt == "--dockerHostName":
                 if len(arg) > 64:
                     Out.err("Docker: The Docker host name must, at most, be 64 characters in length. Shutting down.")
@@ -303,8 +309,12 @@ def main(argv):
             sel.register(smb_socket, selectors.EVENT_READ)
 
             try:
-                Out.norm("Initializing Docker container. This might take awhile...")
-                p.docker = Docker(p.log.stdout, p.log.location_shell, docker_image, docker_host_name)
+                if docker_running_container is None:
+                    Out.norm("Initializing Docker container. This might take awhile...")
+                    p.docker = DockerInitialize(p.log.stdout, p.log.location_shell, docker_image, docker_host_name)
+                else:
+                    Out.norm("Tapping into running container...")
+                    p.docker = DockerRunning(p.log.stdout, p.log.location_shell, docker_running_container)
             except ChildProcessError:
                 Out.err("Samba: Deception cannot function without Docker. Shutting down.")
                 sys.exit(1)
